@@ -633,7 +633,22 @@ py::list maix_vision::_imlib_find_rects(std::vector<int> &roi, uint32_t threshol
   img.w = this->_img->width;
   img.h = this->_img->height;
   img.pixels = (uint8_t *)this->_img->data;
-  img.pixfmt = PIXFORMAT_RGB888;
+  switch (this->_img->mode) {
+    case LIBMAIX_IMAGE_MODE_BINARY:
+        img.pixfmt = PIXFORMAT_BINARY;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB565:
+        img.pixfmt = PIXFORMAT_RGB565;
+        break;
+    case LIBMAIX_IMAGE_MODE_GRAY:
+        img.pixfmt = PIXFORMAT_GRAYSCALE;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB888:
+        img.pixfmt = PIXFORMAT_RGB888;
+        break;
+    default:
+        break;
+  }
 
   rectangle_t _roi;
 
@@ -702,7 +717,22 @@ py::list maix_vision::_imlib_find_lines(std::vector<int> &roi, unsigned int x_st
   img.w = this->_img->width;
   img.h = this->_img->height;
   img.pixels = (uint8_t *)this->_img->data;
-  img.pixfmt = PIXFORMAT_RGB888;
+  switch (this->_img->mode) {
+    case LIBMAIX_IMAGE_MODE_BINARY:
+        img.pixfmt = PIXFORMAT_BINARY;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB565:
+        img.pixfmt = PIXFORMAT_RGB565;
+        break;
+    case LIBMAIX_IMAGE_MODE_GRAY:
+        img.pixfmt = PIXFORMAT_GRAYSCALE;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB888:
+        img.pixfmt = PIXFORMAT_RGB888;
+        break;
+    default:
+        break;
+  }
 
   rectangle_t _roi;
 
@@ -772,7 +802,22 @@ py::list maix_vision::_imlib_find_circles(std::vector<int> &roi, unsigned int x_
   img.w = this->_img->width;
   img.h = this->_img->height;
   img.pixels = (uint8_t *)this->_img->data;
-  img.pixfmt = PIXFORMAT_RGB888;
+  switch (this->_img->mode) {
+    case LIBMAIX_IMAGE_MODE_BINARY:
+        img.pixfmt = PIXFORMAT_BINARY;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB565:
+        img.pixfmt = PIXFORMAT_RGB565;
+        break;
+    case LIBMAIX_IMAGE_MODE_GRAY:
+        img.pixfmt = PIXFORMAT_GRAYSCALE;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB888:
+        img.pixfmt = PIXFORMAT_RGB888;
+        break;
+    default:
+        break;
+  }
 
   rectangle_t _roi;
 
@@ -840,7 +885,22 @@ py::list maix_vision::_imlib_find_line_segments(std::vector<int> &roi, unsigned 
   img.w = this->_img->width;
   img.h = this->_img->height;
   img.pixels = (uint8_t *)this->_img->data;
-  img.pixfmt = PIXFORMAT_RGB888;
+  switch (this->_img->mode) {
+    case LIBMAIX_IMAGE_MODE_BINARY:
+        img.pixfmt = PIXFORMAT_BINARY;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB565:
+        img.pixfmt = PIXFORMAT_RGB565;
+        break;
+    case LIBMAIX_IMAGE_MODE_GRAY:
+        img.pixfmt = PIXFORMAT_GRAYSCALE;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB888:
+        img.pixfmt = PIXFORMAT_RGB888;
+        break;
+    default:
+        break;
+  }
 
   rectangle_t _roi;
 
@@ -929,7 +989,22 @@ py::list maix_vision::_imlib_find_apriltags(std::vector<int> &roi, int families,
   img.w = this->_img->width;
   img.h = this->_img->height;
   img.pixels = (uint8_t *)this->_img->data;
-  img.pixfmt = PIXFORMAT_RGB888;
+  switch (this->_img->mode) {
+    case LIBMAIX_IMAGE_MODE_BINARY:
+        img.pixfmt = PIXFORMAT_BINARY;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB565:
+        img.pixfmt = PIXFORMAT_RGB565;
+        break;
+    case LIBMAIX_IMAGE_MODE_GRAY:
+        img.pixfmt = PIXFORMAT_GRAYSCALE;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB888:
+        img.pixfmt = PIXFORMAT_RGB888;
+        break;
+    default:
+        break;
+  }
 
   rectangle_t _roi;
 
@@ -1012,7 +1087,22 @@ py::list maix_vision::_imlib_find_qrcodes(std::vector<int> &roi)
   img.w = this->_img->width;
   img.h = this->_img->height;
   img.pixels = (uint8_t *)this->_img->data;
-  img.pixfmt = PIXFORMAT_RGB888;
+  switch (this->_img->mode) {
+    case LIBMAIX_IMAGE_MODE_BINARY:
+        img.pixfmt = PIXFORMAT_BINARY;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB565:
+        img.pixfmt = PIXFORMAT_RGB565;
+        break;
+    case LIBMAIX_IMAGE_MODE_GRAY:
+        img.pixfmt = PIXFORMAT_GRAYSCALE;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB888:
+        img.pixfmt = PIXFORMAT_RGB888;
+        break;
+    default:
+        break;
+  }
 
   rectangle_t _roi;
 
@@ -1078,7 +1168,22 @@ py::list maix_vision::_imlib_find_barcodes(std::vector<int> &roi)
   img.w = this->_img->width;
   img.h = this->_img->height;
   img.pixels = (uint8_t *)this->_img->data;
-  img.pixfmt = PIXFORMAT_RGB888;
+  switch (this->_img->mode) {
+    case LIBMAIX_IMAGE_MODE_BINARY:
+        img.pixfmt = PIXFORMAT_BINARY;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB565:
+        img.pixfmt = PIXFORMAT_RGB565;
+        break;
+    case LIBMAIX_IMAGE_MODE_GRAY:
+        img.pixfmt = PIXFORMAT_GRAYSCALE;
+        break;
+    case LIBMAIX_IMAGE_MODE_RGB888:
+        img.pixfmt = PIXFORMAT_RGB888;
+        break;
+    default:
+        break;
+  }
 
   rectangle_t _roi;
 
