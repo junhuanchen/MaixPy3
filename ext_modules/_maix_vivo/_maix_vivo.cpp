@@ -387,16 +387,18 @@ public:
                 return exit();
             this->vi[1]->start_capture(this->vi[1]);
 
-            int ui_w = vi_w, ui_h = vi_h;
-
+            // int ui_w = vi_w, ui_h = vi_h;
+            /*
             if (this->vo_dir % 2 == 1)
             {
                 ui_w = vi_h, ui_h = vi_w;
             }
+            */
+            int ui_w = 240, ui_h = 320;
 
             // vi 320*240 > 90 > 240*320 => vo 240*320
-            // printf("[init] ui_w %d ui_h %d \r\n", ui_w, ui_h);
-            this->ui = frame_new(VI_ARGB8888, (rect_size_t){0, 0, vi_w, vi_h}, this->vo_dir);
+            printf("[init] ui_w %d ui_h %d vo_dir %d vi_w %d vi_h %d ai_w %d ai_h %d ai_dir %d\n", ui_w, ui_h, this->vo_dir, vi_w, vi_h, ai_w, ai_h, this->ai_dir);
+            this->ui = frame_new(VI_ARGB8888, (rect_size_t){0, 0, ui_w, ui_h}, this->vo_dir);
             if (NULL == this->ui)
                 return exit();
 
