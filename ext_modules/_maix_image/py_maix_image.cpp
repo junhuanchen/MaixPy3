@@ -2,15 +2,15 @@
 
 // #include "cv_orb.hpp"
 
-void _load_freetype(std::string path, int fontHeight)
-{
-  libmaix_cv_image_load_freetype(path.c_str(), fontHeight);
-}
+// void _load_freetype(std::string path, int fontHeight)
+// {
+//   libmaix_cv_image_load_freetype(path.c_str(), fontHeight);
+// }
 
-void _free_freetype()
-{
-  libmaix_cv_image_free_freetype();
-}
+// void _free_freetype()
+// {
+//   libmaix_cv_image_free_freetype();
+// }
 
 py::tuple _get_string_size(std::string str, double scale, int thickness)
 {
@@ -43,9 +43,9 @@ maix_image *_image_open(std::string path)
 PYBIND11_MODULE(_maix_image, mo)
 {
   // mode_init();         //模块的初始化函数
-  mo.def("load_freetype", _load_freetype, py::arg("path"), py::arg("fontHeight") = 14)
-      .def("free_freetype", _free_freetype)
-      .def("get_string_size", _get_string_size, py::arg("str"), py::arg("scale") = 1.0, py::arg("thickness") = 1)
+  // mo.def("load_freetype", _load_freetype, py::arg("path"), py::arg("fontHeight") = 14)
+  //     .def("free_freetype", _free_freetype)
+  mo.def("get_string_size", _get_string_size, py::arg("str"), py::arg("scale") = 1.0, py::arg("thickness") = 1)
       .def("new", _image_new, py::arg("size") = std::vector<int>{240, 240}, py::arg("color") = std::vector<int>{0, 0, 0}, py::arg("mode") = "RGB")
       .def("load", _image_load, py::arg("data"), py::arg("size") = std::vector<int>{240, 240}, py::arg("mode") = "RGB")
       .def("open", _image_open, py::arg("str"));

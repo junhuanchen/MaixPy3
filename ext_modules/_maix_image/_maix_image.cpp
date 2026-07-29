@@ -466,13 +466,13 @@ py::bytes maix_image::_tobytes(std::string format, std::vector<int> params)
     cv::imencode(".jpeg", cv_is_bgr, encoded_buffer, params);
     return py::bytes((const char *)encoded_buffer.data(), encoded_buffer.size());
   }
-  if (format == "png")
-  {
-    if (params.size() == 0)
-      params.push_back(CV_IMWRITE_PNG_COMPRESSION), params.push_back(3);
-    cv::imencode(".png", cv_is_bgr, encoded_buffer, params);
-    return py::bytes((const char *)encoded_buffer.data(), encoded_buffer.size());
-  }
+  // if (format == "png")
+  // {
+  //   if (params.size() == 0)
+  //     params.push_back(CV_IMWRITE_PNG_COMPRESSION), params.push_back(3);
+  //   cv::imencode(".png", cv_is_bgr, encoded_buffer, params);
+  //   return py::bytes((const char *)encoded_buffer.data(), encoded_buffer.size());
+  // }
   if (format == "bmp")
   {
     cv::imencode(".bmp", cv_is_bgr, encoded_buffer, params);

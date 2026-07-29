@@ -15,11 +15,11 @@
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
-#include "opencv2/videoio.hpp"
-#include "opencv2/imgcodecs.hpp"
+#include "opencv2/video.hpp" // #include "opencv2/videoio.hpp"
+// #include "opencv2/imgcodecs.hpp"
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
-#include <opencv2/imgcodecs/legacy/constants_c.h>
+// #include <opencv2/imgcodecs/legacy/constants_c.h>
 #include "opencv2/core/types_c.h"
 #include <opencv2/opencv.hpp>
 #include "libmaix_cv_image.h"
@@ -122,7 +122,7 @@ public:
   py::object _to_py(std::string im);
   void _delete();
   maix_image &_clear();
-  void _load_freetype(std::string path);
+  // void _load_freetype(std::string path);
   py::tuple _get_string_size(std::string str, double scale, int thickness);
   maix_image &_resize(int w, int h, int func, int padding, std::vector<int> size);
   maix_image &_draw_line(int x1, int y1, int x2, int y2, std::vector<int> color, int thickness);
