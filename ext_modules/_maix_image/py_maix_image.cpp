@@ -40,12 +40,29 @@ maix_image *_image_open(std::string path)
   return tmp;
 }
 
+uint32_t _get_fb_alloc_size()
+{
+  return fb_alloc_capacity();
+}
+
+uint32_t _set_fb_alloc_size(uint32_t size)
+{
+  const uint32_t min_size = 1024U * 1024U;
+  const uint32_t max_size = 256U * 1024U * 1024U;
+  if ((size < min_size) || (size > max_size))
+    throw py::value_error("fb alloc size must be between 1 MiB and 256 MiB");
+  fb_realloc_init1(size);
+  return fb_alloc_capacity();
+}
+
 PYBIND11_MODULE(_maix_image, mo)
 {
   // mode_init();         //模块的初始化函数
   // mo.def("load_freetype", _load_freetype, py::arg("path"), py::arg("fontHeight") = 14)
   //     .def("free_freetype", _free_freetype)
-  mo.def("get_string_size", _get_string_size, py::arg("str"), py::arg("scale") = 1.0, py::arg("thickness") = 1)
+  mo.def("get_fb_alloc_size", _get_fb_alloc_size)
+      .def("set_fb_alloc_size", _set_fb_alloc_size, py::arg("size"))
+      .def("get_string_size", _get_string_size, py::arg("str"), py::arg("scale") = 1.0, py::arg("thickness") = 1)
       .def("new", _image_new, py::arg("size") = std::vector<int>{240, 240}, py::arg("color") = std::vector<int>{0, 0, 0}, py::arg("mode") = "RGB", py::arg("addr") = 0)
       .def("load", _image_load, py::arg("data"), py::arg("size") = std::vector<int>{240, 240}, py::arg("mode") = "RGB")
       .def("open", _image_open, py::arg("str"));

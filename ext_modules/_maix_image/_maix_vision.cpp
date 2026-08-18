@@ -666,7 +666,6 @@ py::list maix_vision::_imlib_find_rects(std::vector<int> &roi, uint32_t threshol
 
   fb_alloc_mark();
   imlib_find_rects(&out, &img, &_roi, threshold);
-  fb_alloc_free_till_mark();
 
   for (size_t i = 0; list_size(&out); i++)
   {
@@ -691,6 +690,7 @@ py::list maix_vision::_imlib_find_rects(std::vector<int> &roi, uint32_t threshol
     }
     return_val.append(tmps);
   }
+  fb_alloc_free_till_mark();
   return return_val;
 }
 
@@ -750,7 +750,6 @@ py::list maix_vision::_imlib_find_lines(std::vector<int> &roi, unsigned int x_st
 
   fb_alloc_mark();
   imlib_find_lines(&out, &img, &_roi, x_stride, y_stride, threshold, theta_margin, rho_margin);
-  fb_alloc_free_till_mark();
 
   for (size_t i = 0; list_size(&out); i++)
   {
@@ -765,6 +764,7 @@ py::list maix_vision::_imlib_find_lines(std::vector<int> &roi, unsigned int x_st
 
     return_val.append(tmps);
   }
+  fb_alloc_free_till_mark();
   return return_val;
 }
 
@@ -838,7 +838,6 @@ py::list maix_vision::_imlib_find_circles(std::vector<int> &roi, unsigned int x_
 
   fb_alloc_mark();
   imlib_find_circles(&out, &img, &_roi, x_stride, y_stride, threshold, x_margin, y_margin, r_margin, r_min, r_max, r_step);
-  fb_alloc_free_till_mark();
 
   for (size_t i = 0; list_size(&out); i++)
   {
@@ -853,6 +852,7 @@ py::list maix_vision::_imlib_find_circles(std::vector<int> &roi, unsigned int x_
 
     return_val.append(tmps);
   }
+  fb_alloc_free_till_mark();
   return return_val;
 }
 
@@ -918,7 +918,6 @@ py::list maix_vision::_imlib_find_line_segments(std::vector<int> &roi, unsigned 
 
   fb_alloc_mark();
   imlib_lsd_find_line_segments(&out, &img, &_roi, merge_distance, max_theta_diff);
-  fb_alloc_free_till_mark();
 
   for (size_t i = 0; list_size(&out); i++)
   {
@@ -936,6 +935,7 @@ py::list maix_vision::_imlib_find_line_segments(std::vector<int> &roi, unsigned 
 
     return_val.append(tmps);
   }
+  fb_alloc_free_till_mark();
   return return_val;
 }
 
@@ -1022,7 +1022,6 @@ py::list maix_vision::_imlib_find_apriltags(std::vector<int> &roi, int families,
 
   fb_alloc_mark();
   imlib_find_apriltags(&out, &img, &_roi, apriltag_families_t(families), fx, fy, cx, cy);
-  fb_alloc_free_till_mark();
 
   for (size_t i = 0; list_size(&out); i++)
   {
@@ -1071,6 +1070,7 @@ py::list maix_vision::_imlib_find_apriltags(std::vector<int> &roi, int families,
 
     return_val.append(val);
   }
+  fb_alloc_free_till_mark();
   return return_val;
 }
 
@@ -1120,7 +1120,6 @@ py::list maix_vision::_imlib_find_qrcodes(std::vector<int> &roi)
   list_t out;
   fb_alloc_mark();
   imlib_find_qrcodes(&out, &img, &_roi);
-  fb_alloc_free_till_mark();
 
   for (size_t i = 0; list_size(&out); i++)
   {
@@ -1152,6 +1151,7 @@ py::list maix_vision::_imlib_find_qrcodes(std::vector<int> &roi)
     return_val.append(val);
   }
 
+  fb_alloc_free_till_mark();
   return return_val;
 }
 
@@ -1201,7 +1201,6 @@ py::list maix_vision::_imlib_find_barcodes(std::vector<int> &roi)
   list_t out;
   fb_alloc_mark();
   imlib_find_barcodes(&out, &img, &_roi);
-  fb_alloc_free_till_mark();
 
   for (size_t i = 0; list_size(&out); i++)
   {
@@ -1231,6 +1230,7 @@ py::list maix_vision::_imlib_find_barcodes(std::vector<int> &roi)
     return_val.append(val);
   }
 
+  fb_alloc_free_till_mark();
   return return_val;
 }
 
@@ -1391,7 +1391,6 @@ py::list maix_vision::_imlib_find_blobs(std::vector<std::vector<int>> &threshold
   imlib_find_blobs(&out, arg_img, &roi, x_stride, y_stride, &thresholds, invert,
                    area_threshold, pixels_threshold, merge, margin,
                    NULL, NULL, NULL, NULL, x_hist_bins_max, y_hist_bins_max);
-  fb_alloc_free_till_mark();
 
   for (size_t i = 0; list_size(&out); i++)
   {
@@ -1413,5 +1412,6 @@ py::list maix_vision::_imlib_find_blobs(std::vector<std::vector<int>> &threshold
     return_val.append(val);
   }
 
+  fb_alloc_free_till_mark();
   return return_val;
 }

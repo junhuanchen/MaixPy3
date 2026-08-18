@@ -767,7 +767,9 @@ maix_image &maix_image::_draw_image(py::object data, int x, int y, double alpha)
   }
   if (py_input_maix_image != this->get_img_type(data))
     return *this;
-  if ("RGB" != data.attr("mode").cast<std::string>())
+  const std::string source_mode = data.attr("mode").cast<std::string>();
+  if ((source_mode != this->_maix_image_type) ||
+      ((source_mode != "RGB") && (source_mode != "RGBA")))
     return *this;
   auto c_img_p = data.attr("c_img_private");
   size_t im_p = c_img_p().cast<size_t>();
