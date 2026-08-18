@@ -116,7 +116,8 @@ public:
   int _save(std::string file_path, std::string format);
   py::bytes _tobytes(std::string format, std::vector<int> params);
   size_t img_pointer();
-  maix_image &_new(std::vector<int> size, std::vector<int> color, std::string mode);
+  size_t to_addr();
+  maix_image &_new(std::vector<int> size, std::vector<int> color, std::string mode, size_t addr);
   maix_image &_load(py::object data, std::vector<int> size, std::string mode);
   maix_image &_open_file(std::string path);
   py::object _to_py(std::string im);

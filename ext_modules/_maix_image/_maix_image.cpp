@@ -75,6 +75,13 @@ size_t maix_image::img_pointer()
   return pointer;
 }
 
+size_t maix_image::to_addr()
+{
+  if (NULL == this->_img)
+    return 0;
+  return (size_t)this->_img->data;
+}
+
 void maix_image::v_init()
 {
   this->_img = NULL;
@@ -145,8 +152,24 @@ static inline libmaix_image_t *libmaix_image_create_patch(libmaix_image_t *self,
   return self;
 }
 
-maix_image &maix_image::_new(std::vector<int> size, std::vector<int> color, std::string mode)
+maix_image &maix_image::_new(std::vector<int> size, std::vector<int> color, std::string mode, size_t addr)
 {
+  if (addr)
+  {
+    // 零拷贝:直接引用 addr 指向的外部内存(is_data_alloc=false,销毁时不释放该内存),
+    // 不做 color 填充以免覆盖外部数据,也不走 create_patch 复用旧缓冲区
+    this->v_close();
+    this->_maix_image_type = mode;
+    this->_maix_image_width = size[0];
+    this->_maix_image_height = size[1];
+    this->_maix_image_size = this->_maix_image_width * this->_maix_image_height * any_cast<int>(this->py_to_pram[this->get_to(this->_maix_image_type)][1]);
+    this->_img = libmaix_image_create(size[0], size[1], any_cast<libmaix_image_mode_t>(this->py_to_pram[this->get_to(this->_maix_image_type)][0]), LIBMAIX_IMAGE_LAYOUT_HWC, (void *)addr, false);
+    if (NULL == this->_img)
+    {
+      this->v_close();
+    }
+    return *this;
+  }
   this->_maix_image_type = mode;
   this->_maix_image_width = size[0];
   this->_maix_image_height = size[1];

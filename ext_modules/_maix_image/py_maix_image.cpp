@@ -19,10 +19,10 @@ py::tuple _get_string_size(std::string str, double scale, int thickness)
   return py::make_tuple(w, h);
 }
 
-maix_image *_image_new(std::vector<int> size, std::vector<int> color, std::string mode)
+maix_image *_image_new(std::vector<int> size, std::vector<int> color, std::string mode, size_t addr)
 {
   auto tmp = new maix_image();
-  tmp->_new(size, color, mode);
+  tmp->_new(size, color, mode, addr);
   return tmp;
 }
 
@@ -46,7 +46,7 @@ PYBIND11_MODULE(_maix_image, mo)
   // mo.def("load_freetype", _load_freetype, py::arg("path"), py::arg("fontHeight") = 14)
   //     .def("free_freetype", _free_freetype)
   mo.def("get_string_size", _get_string_size, py::arg("str"), py::arg("scale") = 1.0, py::arg("thickness") = 1)
-      .def("new", _image_new, py::arg("size") = std::vector<int>{240, 240}, py::arg("color") = std::vector<int>{0, 0, 0}, py::arg("mode") = "RGB")
+      .def("new", _image_new, py::arg("size") = std::vector<int>{240, 240}, py::arg("color") = std::vector<int>{0, 0, 0}, py::arg("mode") = "RGB", py::arg("addr") = 0)
       .def("load", _image_load, py::arg("data"), py::arg("size") = std::vector<int>{240, 240}, py::arg("mode") = "RGB")
       .def("open", _image_open, py::arg("str"));
 
@@ -92,8 +92,9 @@ PYBIND11_MODULE(_maix_image, mo)
       .def("__len__", &maix_image::len__)
       // maix_image C++类数据传递
       .def("c_img_private", &maix_image::img_pointer)
+      .def("to_addr", &maix_image::to_addr)
       // maix_image类的基本方法
-      .def("new", &maix_image::_new, py::arg("size") = std::vector<int>{240, 240}, py::arg("color") = std::vector<int>{0, 0, 0}, py::arg("mode") = "RGB")
+      .def("new", &maix_image::_new, py::arg("size") = std::vector<int>{240, 240}, py::arg("color") = std::vector<int>{0, 0, 0}, py::arg("mode") = "RGB", py::arg("addr") = 0)
       .def("load", &maix_image::_load, py::arg("data"), py::arg("size") = std::vector<int>{240, 240}, py::arg("mode") = "RGB")
       .def("open", &maix_image::_open_file)
       .def("copy", &maix_image::_to_py, py::arg("img") = "maix_image")
