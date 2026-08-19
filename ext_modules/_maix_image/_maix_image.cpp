@@ -1,5 +1,52 @@
 #include "maix_image.h"
 
+namespace
+{
+// RGB/RGBA are the public format names, but image memory is BGR/BGRA.
+// libmaix's drawing helpers pass the color fields to cv::Scalar in field order,
+// so swap R/B only for four-channel images.
+libmaix_image_color_t public_color(const std::vector<int> &color, bool bgr)
+{
+  libmaix_image_color_t value = {};
+  const uint8_t r = color.size() > 0 ? color[0] : 0;
+  const uint8_t g = color.size() > 1 ? color[1] : 0;
+  const uint8_t b = color.size() > 2 ? color[2] : 0;
+  const uint8_t a = color.size() > 3 ? color[3] : 255;
+  value.rgb888.r = bgr ? b : r;
+  value.rgb888.g = g;
+  value.rgb888.b = bgr ? r : b;
+  value.rgb888.a = a;
+  return value;
+}
+
+void copy_public_pixels(void *dst, const char *src, int width, int height, const std::string &mode)
+{
+  const size_t size = width * height * (mode == "RGBA" ? 4 : mode == "RGB" ? 3 : mode == "RGB16" ? 2 : 1);
+  if (mode != "RGB" && mode != "RGBA")
+  {
+    memcpy(dst, src, size);
+    return;
+  }
+  const int type = mode == "RGBA" ? CV_8UC4 : CV_8UC3;
+  cv::Mat public_image(height, width, type, const_cast<char *>(src));
+  cv::Mat internal_image(height, width, type, dst);
+  cv::cvtColor(public_image, internal_image,
+               mode == "RGBA" ? cv::COLOR_RGBA2BGRA : cv::COLOR_RGB2BGR);
+}
+
+py::bytes public_pixels(const libmaix_image_t *img, const std::string &mode, int size)
+{
+  if (mode != "RGB" && mode != "RGBA")
+    return py::bytes((const char *)img->data, size);
+  const int type = mode == "RGBA" ? CV_8UC4 : CV_8UC3;
+  cv::Mat internal_image(img->height, img->width, type, img->data);
+  cv::Mat public_image;
+  cv::cvtColor(internal_image, public_image,
+               mode == "RGBA" ? cv::COLOR_BGRA2RGBA : cv::COLOR_BGR2RGB);
+  return py::bytes((const char *)public_image.data, public_image.total() * public_image.elemSize());
+}
+}
+
 any_image::any_image()
 {
   this->py_to_pram[0][0] = LIBMAIX_IMAGE_MODE_GRAY;
@@ -177,7 +224,7 @@ maix_image &maix_image::_new(std::vector<int> size, std::vector<int> color, std:
   this->_img = libmaix_image_create_patch(this->_img, size[0], size[1], any_cast<libmaix_image_mode_t>(this->py_to_pram[this->get_to(this->_maix_image_type)][0]), LIBMAIX_IMAGE_LAYOUT_HWC, NULL, true);
   if (this->_img)
   {
-    libmaix_cv_image_draw_rectangle(this->_img, 0, 0, size[0], size[1], MaixColorBGRA(color[0], color[1], color[2], color[3]), -1);
+    libmaix_cv_image_draw_rectangle(this->_img, 0, 0, size[0], size[1], public_color(color, mode == "RGB" || mode == "RGBA"), -1);
   }
   else
   {
@@ -200,7 +247,7 @@ maix_image &maix_image::_load(py::object data, std::vector<int> size, std::strin
     if (this->_img)
     {
       std::string tmp = data.cast<std::string>();
-      memcpy(this->_img->data, tmp.c_str(), this->_maix_image_size);
+      copy_public_pixels(this->_img->data, tmp.data(), this->_maix_image_width, this->_maix_image_height, this->_maix_image_type);
     }
     else
     {
@@ -243,7 +290,7 @@ maix_image &maix_image::_load(py::object data, std::vector<int> size, std::strin
     this->_maix_image_size = this->_maix_image_width * this->_maix_image_height * any_cast<int>(py_to_pram[this->get_to(this->_maix_image_type)][1]);
     if (this->_img)
     {
-      memcpy(this->_img->data, img_tmp.c_str(), this->_maix_image_size);
+      copy_public_pixels(this->_img->data, img_tmp.data(), this->_maix_image_width, this->_maix_image_height, this->_maix_image_type);
     }
     else
     {
@@ -264,7 +311,7 @@ maix_image &maix_image::_load(py::object data, std::vector<int> size, std::strin
     this->_maix_image_size = this->_maix_image_width * this->_maix_image_height * any_cast<int>(py_to_pram[this->get_to(this->_maix_image_type)][1]);
     if (this->_img)
     {
-      memcpy(this->_img->data, img_tmp.c_str(), this->_maix_image_size);
+      copy_public_pixels(this->_img->data, img_tmp.data(), this->_maix_image_width, this->_maix_image_height, this->_maix_image_type);
     }
     else
     {
@@ -297,7 +344,6 @@ maix_image &maix_image::_open_file(std::string path)
         this->v_close();
         return *this;
       }
-      cv::cvtColor(image, image, cv::ColorConversionCodes::COLOR_BGR2RGB);
       tmp_img = libmaix_image_create(image.cols, image.rows, LIBMAIX_IMAGE_MODE_RGB888, LIBMAIX_IMAGE_LAYOUT_HWC, NULL, true);
       memcpy(tmp_img->data, image.data, tmp_img->width * tmp_img->height * 3);
     }
@@ -315,6 +361,12 @@ maix_image &maix_image::_open_file(std::string path)
     return *this;
   }
   this->_img = tmp_img;
+  // libmaix's file loader returns RGB; the OpenCV fallback above is already BGR.
+  if (LIBMAIX_ERR_NOT_EXEC != err)
+  {
+    cv::Mat rgb(this->_img->height, this->_img->width, CV_8UC3, this->_img->data);
+    cv::cvtColor(rgb, rgb, cv::COLOR_RGB2BGR);
+  }
   this->_maix_image_width = this->_img->width;
   this->_maix_image_height = this->_img->height;
   this->_maix_image_type = "RGB";
@@ -350,7 +402,7 @@ py::object maix_image::_to_py(std::string im)
     {
       auto _PIL_ = py::module::import("PIL.Image");
       auto frombytes = _PIL_.attr("frombytes");
-      py::bytes tmp((const char *)this->_img->data, this->_maix_image_size);
+      py::bytes tmp = public_pixels(this->_img, this->_maix_image_type, this->_maix_image_size);
       py::tuple sizek = py::make_tuple(this->_maix_image_width, this->_maix_image_height);
       auto PIL_img = frombytes(this->_maix_image_type, sizek, tmp);
       return PIL_img;
@@ -369,7 +421,7 @@ py::object maix_image::_to_py(std::string im)
       auto _numpy_ = py::module::import("numpy");
       auto from_buf = _numpy_.attr("frombuffer");
       auto _numpy_dtype = _numpy_.attr("uint8");
-      py::bytes tmp((const char *)this->_img->data, this->_maix_image_size);
+      py::bytes tmp = public_pixels(this->_img, this->_maix_image_type, this->_maix_image_size);
       auto numpy_obj = from_buf(tmp, _numpy_dtype);
       // auto numpy_obj_shape = numpy_obj.attr("shape");
       if (this->_maix_image_type == "RGB")
@@ -418,14 +470,33 @@ void maix_image::_show()
   auto draw__ = show.attr("draw");
   if ((this->_maix_image_type == "RGB") && (this->_maix_image_width == 240) && (this->_maix_image_height == 240))
   {
-    py::bytes tmp((const char *)this->_img->data, 240 * 240 * 3);
+    py::bytes tmp = public_pixels(this->_img, this->_maix_image_type, this->_maix_image_size);
     draw__(tmp);
     return;
   }
   libmaix_image_t *tmp = libmaix_image_create(240, 240, any_cast<libmaix_image_mode_t>(this->py_to_pram[2][0]), LIBMAIX_IMAGE_LAYOUT_HWC, NULL, true);
   if (this->_maix_image_type != "RGB")
   {
-    if (libmaix_cv_image_convert(this->_img, any_cast<libmaix_image_mode_t>(py_to_pram[2][0]), &tmp) != 0)
+    int convert_result = 0;
+    if (this->_maix_image_type == "RGBA")
+    {
+      cv::Mat bgra(this->_img->height, this->_img->width, CV_8UC4, this->_img->data);
+      cv::Mat rgb, output;
+      cv::cvtColor(bgra, rgb, cv::COLOR_BGRA2RGB);
+      if (rgb.cols == 240 && rgb.rows == 240)
+        output = rgb;
+      else
+        cv::resize(rgb, output, cv::Size(240, 240));
+      py::bytes tmp_bytes((const char *)output.data, 240 * 240 * 3);
+      draw__(tmp_bytes);
+      libmaix_image_destroy(&tmp);
+      return;
+    }
+    else
+    {
+      convert_result = libmaix_cv_image_convert(this->_img, any_cast<libmaix_image_mode_t>(py_to_pram[2][0]), &tmp);
+    }
+    if (convert_result != 0)
     {
       libmaix_image_destroy(&tmp);
       return;
@@ -452,7 +523,9 @@ void maix_image::_show()
   }
   else
   {
-    cv::Mat src(this->_img->height, this->_img->width, any_cast<int>(py_to_pram[2][2]), this->_img->data);
+      cv::Mat src_bgr(this->_img->height, this->_img->width, CV_8UC3, this->_img->data);
+      cv::Mat src;
+      cv::cvtColor(src_bgr, src, cv::COLOR_BGR2RGB);
     cv::Mat dst(240, 240, any_cast<int>(py_to_pram[2][2]), tmp->data);
     cv::resize(src, dst, cv::Size(240, 240));
     py::bytes tmp_bytes((const char *)tmp->data, 240 * 240 * 3);
@@ -466,7 +539,18 @@ int maix_image::_save(std::string file_path, std::string format)
 {
   if (NULL == this->_img)
     return -1;
-  libmaix_cv_image_save_file(this->_img, file_path.c_str());
+  if (this->_maix_image_type == "RGB" || this->_maix_image_type == "RGBA")
+  {
+    // OpenCV's encoder consumes BGR/BGRA directly, our internal layouts.
+    cv::Mat internal(this->_img->height, this->_img->width,
+                     this->_maix_image_type == "RGBA" ? CV_8UC4 : CV_8UC3,
+                     this->_img->data);
+    cv::imwrite(file_path, internal);
+  }
+  else
+  {
+    libmaix_cv_image_save_file(this->_img, file_path.c_str());
+  }
   return 0;
 }
 
@@ -475,12 +559,19 @@ py::bytes maix_image::_tobytes(std::string format, std::vector<int> params)
   if (NULL == this->_img)
     return py::bytes();
 
-  if (format == "rgb")
-    return py::bytes((const char *)this->_img->data, this->_maix_image_size);
+  if (format == "rgb" || format == "rgba")
+    return public_pixels(this->_img, this->_maix_image_type, this->_maix_image_size);
 
   std::vector<uchar> encoded_buffer;
-  cv::Mat cv_is_bgr, rgb(this->_img->height, this->_img->width, CV_8UC3, this->_img->data);
-  cv::cvtColor(rgb, cv_is_bgr, cv::COLOR_RGB2BGR);
+  cv::Mat cv_is_bgr;
+  if (this->_maix_image_type == "RGBA")
+    cv_is_bgr = cv::Mat(this->_img->height, this->_img->width, CV_8UC4, this->_img->data);
+  else if (this->_maix_image_type == "RGB")
+    cv_is_bgr = cv::Mat(this->_img->height, this->_img->width, CV_8UC3, this->_img->data);
+  else if (this->_maix_image_type == "L")
+    cv_is_bgr = cv::Mat(this->_img->height, this->_img->width, CV_8UC1, this->_img->data);
+  else
+    return py::bytes();
 
   if (format == "jpg")
   {
@@ -578,7 +669,7 @@ maix_image &maix_image::_draw_line(int x1, int y1, int x2, int y2, std::vector<i
     py::print("[image] is empty !");
     return *this;
   }
-  libmaix_cv_image_draw_line(this->_img, x1, y1, x2, y2, MaixColorBGRA(color[0], color[1], color[2], color[3]), thickness);
+  libmaix_cv_image_draw_line(this->_img, x1, y1, x2, y2, public_color(color, this->_maix_image_type == "RGB" || this->_maix_image_type == "RGBA"), thickness);
   return *this;
 }
 
@@ -607,7 +698,7 @@ maix_image &maix_image::_draw_rectangle(int x1_x, int y1_y, int x2_w, int y2_h, 
   }
   if (is_xywh)
     x2_w = x1_x + x2_w, y2_h = y1_y + y2_h;
-  libmaix_cv_image_draw_rectangle(this->_img, x1_x, y1_y, x2_w, y2_h, MaixColorBGRA(color[0], color[1], color[2], color[3]), thickness);
+  libmaix_cv_image_draw_rectangle(this->_img, x1_x, y1_y, x2_w, y2_h, public_color(color, this->_maix_image_type == "RGB" || this->_maix_image_type == "RGBA"), thickness);
   return *this;
 }
 
@@ -618,7 +709,7 @@ maix_image &maix_image::_draw_circle(int x, int y, int r, std::vector<int> color
     py::print("[image] is empty !");
     return *this;
   }
-  libmaix_cv_image_draw_circle(this->_img, x, y, r, MaixColorBGRA(color[0], color[1], color[2], color[3]), thickness);
+  libmaix_cv_image_draw_circle(this->_img, x, y, r, public_color(color, this->_maix_image_type == "RGB" || this->_maix_image_type == "RGBA"), thickness);
   return *this;
 }
 
@@ -629,7 +720,7 @@ maix_image &maix_image::_draw_ellipse(int cx, int cy, int rx, int ry, double ang
     py::print("[image] is empty !");
     return *this;
   }
-  libmaix_cv_image_draw_ellipse(this->_img, cx, cy, rx, ry, angle, startAngle, endAngle, MaixColorBGRA(color[0], color[1], color[2], color[3]), thickness);
+  libmaix_cv_image_draw_ellipse(this->_img, cx, cy, rx, ry, angle, startAngle, endAngle, public_color(color, this->_maix_image_type == "RGB" || this->_maix_image_type == "RGBA"), thickness);
   return *this;
 }
 
@@ -640,7 +731,7 @@ maix_image &maix_image::_draw_string(int x, int y, std::string str, double scale
     py::print("[image] is empty !");
     return *this;
   }
-  libmaix_cv_image_draw_string(this->_img, x, y, str.c_str(), scale, MaixColorBGRA(color[0], color[1], color[2], color[3]), thickness);
+  libmaix_cv_image_draw_string(this->_img, x, y, str.c_str(), scale, public_color(color, this->_maix_image_type == "RGB" || this->_maix_image_type == "RGBA"), thickness);
   return *this;
 }
 
@@ -681,8 +772,33 @@ maix_image &maix_image::_convert(std::string mode)
   libmaix_image_t *tmp = libmaix_image_create(this->_img->width, this->_img->height, any_cast<libmaix_image_mode_t>(this->py_to_pram[this->get_to(mode)][0]), LIBMAIX_IMAGE_LAYOUT_HWC, NULL, true);
   if (tmp)
   {
-    if (libmaix_cv_image_convert(this->_img, any_cast<libmaix_image_mode_t>(py_to_pram[this->get_to(mode)][0]), &tmp) == 0)
+    libmaix_image_t *convert_src = this->_img;
+    libmaix_image_t *public_color_image = NULL;
+    const bool source_is_color = this->_maix_image_type == "RGB" || this->_maix_image_type == "RGBA";
+    if (source_is_color && mode != this->_maix_image_type)
     {
+      public_color_image = libmaix_image_create(this->_img->width, this->_img->height,
+                                                this->_img->mode,
+                                                LIBMAIX_IMAGE_LAYOUT_HWC, NULL, true);
+      if (public_color_image)
+      {
+        const int type = this->_maix_image_type == "RGBA" ? CV_8UC4 : CV_8UC3;
+        cv::Mat internal(this->_img->height, this->_img->width, type, this->_img->data);
+        cv::Mat public_image(this->_img->height, this->_img->width, type, public_color_image->data);
+        cv::cvtColor(internal, public_image,
+                     this->_maix_image_type == "RGBA" ? cv::COLOR_BGRA2RGBA : cv::COLOR_BGR2RGB);
+        convert_src = public_color_image;
+      }
+    }
+    if (libmaix_cv_image_convert(convert_src, any_cast<libmaix_image_mode_t>(py_to_pram[this->get_to(mode)][0]), &tmp) == 0)
+    {
+      if ((mode == "RGB" || mode == "RGBA") && this->_maix_image_type != mode)
+      {
+        const int type = mode == "RGBA" ? CV_8UC4 : CV_8UC3;
+        cv::Mat public_image(tmp->height, tmp->width, type, tmp->data);
+        cv::cvtColor(public_image, public_image,
+                     mode == "RGBA" ? cv::COLOR_RGBA2BGRA : cv::COLOR_RGB2BGR);
+      }
       libmaix_image_destroy(&this->_img), this->_img = tmp;
       this->_maix_image_type = mode;
       this->_maix_image_size = this->_img->width * this->_img->height * any_cast<int>(py_to_pram[this->get_to(mode)][1]);
@@ -691,6 +807,7 @@ maix_image &maix_image::_convert(std::string mode)
     {
       libmaix_image_destroy(&tmp);
     }
+    libmaix_image_destroy(&public_color_image);
   }
   else
   {
@@ -743,10 +860,10 @@ maix_image *maix_image::_draw_crop(int x, int y, int w, int h)
   if (tmp)
   {
     maix_image *tmp_img = new maix_image();
-    if (libmaix_cv_image_crop(this->_img, x, y, w, h, &tmp) != 0)
-    {
-      return tmp_img;
-    }
+    const int type = any_cast<int>(py_to_pram[this->get_to(this->_maix_image_type)][2]);
+    cv::Mat source(this->_img->height, this->_img->width, type, this->_img->data);
+    cv::Mat destination(h, w, type, tmp->data);
+    source(cv::Rect(x, y, w, h)).copyTo(destination);
     tmp_img->local_load(tmp);
     return tmp_img;
   }
@@ -784,9 +901,10 @@ std::vector<int> maix_image::_get_pixel(int x, int y)
   if (NULL == this->_img)
     return color_val;
   libmaix_image_color_t colot_tmp = libmaix_cv_image_get_pixel(this->_img, x, y);
-  color_val.push_back(colot_tmp.rgb888.r);
+  const bool bgr = this->_maix_image_type == "RGB" || this->_maix_image_type == "RGBA";
+  color_val.push_back(bgr ? colot_tmp.rgb888.b : colot_tmp.rgb888.r);
   color_val.push_back(colot_tmp.rgb888.g);
-  color_val.push_back(colot_tmp.rgb888.b);
+  color_val.push_back(bgr ? colot_tmp.rgb888.r : colot_tmp.rgb888.b);
   color_val.push_back(colot_tmp.rgb888.a);
   return color_val;
 }
@@ -808,15 +926,15 @@ maix_image &maix_image::_set_pixel(int x, int y, std::vector<int> color)
     colot_tmp.rgb888.a = 0;
     break;
   case 2:
-    colot_tmp.rgb888.r = color[0];
+    colot_tmp.rgb888.r = color[2];
     colot_tmp.rgb888.g = color[1];
-    colot_tmp.rgb888.b = color[2];
+    colot_tmp.rgb888.b = color[0];
     colot_tmp.rgb888.a = 0;
     break;
   case 3:
-    colot_tmp.rgb888.r = color[0];
+    colot_tmp.rgb888.r = color[2];
     colot_tmp.rgb888.g = color[1];
-    colot_tmp.rgb888.b = color[2];
+    colot_tmp.rgb888.b = color[0];
     colot_tmp.rgb888.a = color[3];
     break;
   default:
@@ -1186,9 +1304,9 @@ maix_image &maix_image::_opencv_Canny(double threshold1, double threshold2, int 
   if (this->_maix_image_type == "RGB")
   {
     cv::Mat gray, rgb(this->_img->height, this->_img->width, CV_8UC3, this->_img->data);
-    cv::cvtColor(rgb, gray, cv::COLOR_RGB2GRAY);
+    cv::cvtColor(rgb, gray, cv::COLOR_BGR2GRAY);
     cv::Canny(gray, gray, threshold1, threshold2, apertureSize, L2gradient);
-    cv::cvtColor(gray, rgb, cv::COLOR_GRAY2RGB);
+    cv::cvtColor(gray, rgb, cv::COLOR_GRAY2BGR);
   }
   return *this;
 }
@@ -1201,8 +1319,9 @@ py::dict maix_image::_imlib_find_template(maix_image &template_src, float arg_th
     return return_val;
   }
 
-  cv::Mat gray, rgb(this->_img->height, this->_img->width, CV_8UC3, this->_img->data);
-  cv::cvtColor(rgb, gray, cv::COLOR_RGB2GRAY);
+  const int source_type = this->_maix_image_type == "RGBA" ? CV_8UC4 : CV_8UC3;
+  cv::Mat gray, rgb(this->_img->height, this->_img->width, source_type, this->_img->data);
+  cv::cvtColor(rgb, gray, cv::COLOR_BGR2GRAY);
 
   image_t _arg_img = {
               .w = gray.cols,
@@ -1213,8 +1332,9 @@ py::dict maix_image::_imlib_find_template(maix_image &template_src, float arg_th
   arg_img->data = gray.data;
   arg_img->pixfmt = PIXFORMAT_GRAYSCALE;
 
-  cv::Mat template_gray, template_rgb(template_src._img->height, template_src._img->width, CV_8UC3, template_src._img->data);
-  cv::cvtColor(template_rgb, template_gray, cv::COLOR_RGB2GRAY);
+  const int template_type = template_src._maix_image_type == "RGBA" ? CV_8UC4 : CV_8UC3;
+  cv::Mat template_gray, template_rgb(template_src._img->height, template_src._img->width, template_type, template_src._img->data);
+  cv::cvtColor(template_rgb, template_gray, cv::COLOR_BGR2GRAY);
 
   image_t _arg_template = {
               .w = template_gray.cols,

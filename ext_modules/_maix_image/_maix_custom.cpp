@@ -36,11 +36,11 @@ py::list maix_custom::_find_ball_blob(std::vector<std::vector<int>> &thresholds,
         if (roi[2] != 0 && roi[3] != 0)
         {
             cv::Rect rect(roi[0], roi[1], roi[2], roi[3]);
-            cvtColor(in_img(rect), lab, cv::COLOR_RGB2Lab);
+            cvtColor(in_img(rect), lab, cv::COLOR_BGR2Lab);
         }
         else
         {
-            cvtColor(in_img, lab, cv::COLOR_RGB2Lab);
+            cvtColor(in_img, lab, cv::COLOR_BGR2Lab);
         }
         for (size_t i = 0; i < thresholds.size(); i++)
         {
@@ -58,11 +58,11 @@ py::list maix_custom::_find_ball_blob(std::vector<std::vector<int>> &thresholds,
         if (roi[2] != 0 && roi[3] != 0)
         {
             cv::Rect rect(roi[0], roi[1], roi[2], roi[3]);
-            cvtColor(in_img(rect), lab, cv::COLOR_RGB2HSV);
+            cvtColor(in_img(rect), lab, cv::COLOR_BGR2HSV);
         }
         else
         {
-            cvtColor(in_img, lab, cv::COLOR_RGB2HSV);
+            cvtColor(in_img, lab, cv::COLOR_BGR2HSV);
         }
         for (size_t i = 0; i < thresholds.size(); i++)
         {

@@ -2,6 +2,16 @@
 
 static class maix_vision::imlib_env imlib;
 
+static void prepare_imlib_image(libmaix_image_t *src, image_t &dst)
+{
+  if (src->mode != LIBMAIX_IMAGE_MODE_RGB888)
+    throw py::value_error("imlib find_* only supports RGB images; convert the image to RGB first");
+  dst.w = src->width;
+  dst.h = src->height;
+  dst.pixels = (uint8_t *)src->data;
+  dst.pixfmt = PIXFORMAT_RGB888;
+}
+
 // Mat img
 // img.cols 宽
 // img.rows 高
@@ -163,11 +173,11 @@ py::list maix_vision::_maix_vision_find_blob(std::vector<std::vector<int>> &thre
     if (roi[2] != 0 && roi[3] != 0)
     {
       cv::Rect rect(roi[0], roi[1], roi[2], roi[3]);
-      cvtColor(in_img(rect), lab, cv::COLOR_RGB2Lab);
+      cvtColor(in_img(rect), lab, cv::COLOR_BGR2Lab);
     }
     else
     {
-      cvtColor(in_img, lab, cv::COLOR_RGB2Lab);
+      cvtColor(in_img, lab, cv::COLOR_BGR2Lab);
     }
     for (size_t i = 0; i < thresholds.size(); i++)
     {
@@ -185,11 +195,11 @@ py::list maix_vision::_maix_vision_find_blob(std::vector<std::vector<int>> &thre
     if (roi[2] != 0 && roi[3] != 0)
     {
       cv::Rect rect(roi[0], roi[1], roi[2], roi[3]);
-      cvtColor(in_img(rect), lab, cv::COLOR_RGB2HSV);
+      cvtColor(in_img(rect), lab, cv::COLOR_BGR2HSV);
     }
     else
     {
-      cvtColor(in_img, lab, cv::COLOR_RGB2HSV);
+      cvtColor(in_img, lab, cv::COLOR_BGR2HSV);
     }
     for (size_t i = 0; i < thresholds.size(); i++)
     {
@@ -319,7 +329,7 @@ py::list maix_vision::_maix_vision_find_ball_blob(std::vector<int> &thresholds, 
   case 1: // lab
     if (in_img.channels() != 3)
       return out;
-    cv::cvtColor(in_img, hsv, cv::COLOR_RGB2Lab);
+    cv::cvtColor(in_img, hsv, cv::COLOR_BGR2Lab);
     thresholds[0] = int((thresholds[0] * 255) / 100);
     thresholds[1] = thresholds[1] + 128;
     thresholds[2] = thresholds[2] + 128;
@@ -330,7 +340,7 @@ py::list maix_vision::_maix_vision_find_ball_blob(std::vector<int> &thresholds, 
   case 2: // hsv
     if (in_img.channels() != 3)
       return out;
-    cv::cvtColor(in_img, hsv, cv::COLOR_RGB2HSV);
+    cv::cvtColor(in_img, hsv, cv::COLOR_BGR2HSV);
     thresholds[0] = int(thresholds[0] / 2);
     thresholds[1] = int(thresholds[1] * 2.55);
     thresholds[2] = int(thresholds[2] * 2.55);
@@ -382,7 +392,7 @@ py::dict find_line_old(cv::Mat &src)
   py::dict return_val;
   cv::Mat in_img = src;
   cv::Mat src_gary, mask;
-  cv::cvtColor(in_img, src_gray, cv::COLOR_RGB2GRAY); //将图片变成灰度图
+  cv::cvtColor(in_img, src_gray, cv::COLOR_BGR2GRAY); //将图片变成灰度图
   cv::Mat element = getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
   cv::erode(src_gray, src_gray, element);
   cv::dilate(src_gray, src_gray, element);
@@ -474,7 +484,7 @@ void AdaptiveThreshold(cv::Mat &src, cv::Mat &dst, double Maxval, int Subsize, d
 {
 
   if (src.channels() > 1)
-    cv::cvtColor(src, src, cv::COLOR_RGB2GRAY);
+    cv::cvtColor(src, src, cv::COLOR_BGR2GRAY);
 
   cv::Mat smooth;
   switch (method)
@@ -523,7 +533,7 @@ py::dict maix_vision::find_line(int func)
   src.copyTo(in_img);
   // cv::imwrite("/tmp/src.jpg", in_img);
   cv::Mat src_gary;
-  cvtColor(in_img, src_gray, cv::COLOR_RGB2GRAY); //将图片变成灰度图
+  cvtColor(in_img, src_gray, cv::COLOR_BGR2GRAY); //将图片变成灰度图
   // cv::imwrite("/tmp/src.jpg", src_gray);
   cv::Mat element = getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
   cv::dilate(src_gray, src_gray, element); // 放大主线
@@ -650,6 +660,7 @@ py::list maix_vision::_imlib_find_rects(std::vector<int> &roi, uint32_t threshol
         break;
   }
 
+  prepare_imlib_image(this->_img, img);
   rectangle_t _roi;
 
   _roi.x = roi[0];
@@ -734,6 +745,7 @@ py::list maix_vision::_imlib_find_lines(std::vector<int> &roi, unsigned int x_st
         break;
   }
 
+  prepare_imlib_image(this->_img, img);
   rectangle_t _roi;
 
   _roi.x = roi[0];
@@ -819,6 +831,7 @@ py::list maix_vision::_imlib_find_circles(std::vector<int> &roi, unsigned int x_
         break;
   }
 
+  prepare_imlib_image(this->_img, img);
   rectangle_t _roi;
 
   _roi.x = roi[0];
@@ -902,6 +915,7 @@ py::list maix_vision::_imlib_find_line_segments(std::vector<int> &roi, unsigned 
         break;
   }
 
+  prepare_imlib_image(this->_img, img);
   rectangle_t _roi;
 
   _roi.x = roi[0];
@@ -1006,6 +1020,7 @@ py::list maix_vision::_imlib_find_apriltags(std::vector<int> &roi, int families,
         break;
   }
 
+  prepare_imlib_image(this->_img, img);
   rectangle_t _roi;
 
   _roi.x = roi[0];
@@ -1104,6 +1119,7 @@ py::list maix_vision::_imlib_find_qrcodes(std::vector<int> &roi)
         break;
   }
 
+  prepare_imlib_image(this->_img, img);
   rectangle_t _roi;
 
   _roi.x = roi[0];
@@ -1185,6 +1201,7 @@ py::list maix_vision::_imlib_find_barcodes(std::vector<int> &roi)
         break;
   }
 
+  prepare_imlib_image(this->_img, img);
   rectangle_t _roi;
 
   _roi.x = roi[0];
@@ -1358,6 +1375,7 @@ py::list maix_vision::_imlib_find_blobs(std::vector<std::vector<int>> &threshold
   arg_img->h = this->_img->height;
   arg_img->pixels = (uint8_t *)this->_img->data;
   arg_img->pixfmt = PIXFORMAT_RGB888;
+  prepare_imlib_image(this->_img, *arg_img);
 
   if (roi_src[2] == 0)
     roi_src[2] = arg_img->w;
