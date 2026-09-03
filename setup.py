@@ -24,7 +24,15 @@ elif (sysstr == "Linux"):
     from envs.maix_r329 import _maix_modules, _maix_data_files, _maix_py_modules
     sys.argv.remove('maix_r329')
   else:
-    from envs.linux_desktop import _maix_modules, _maix_data_files, _maix_py_modules
+    # 自动选择 Linux 构建环境：
+    #   x86 + glibc（如 Ubuntu 桌面）→ linux_ubuntu（-ubuntu-2204 现成静态库）
+    #   其它（如 Alpine armhf 虚拟机）→ linux_desktop（通用 opencv-mobile-4.13.0）
+    machine = platform.machine().lower()
+    libc, _ = platform.libc_ver()
+    if machine in ('x86_64', 'amd64', 'i386', 'i486', 'i586', 'i686') and libc == 'glibc':
+      from envs.linux_ubuntu import _maix_modules, _maix_data_files, _maix_py_modules
+    else:
+      from envs.linux_desktop import _maix_modules, _maix_data_files, _maix_py_modules
 
 ext_modules.extend(_maix_modules)
 data_files.extend(_maix_data_files)
