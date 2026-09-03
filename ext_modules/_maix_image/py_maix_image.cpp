@@ -2,15 +2,18 @@
 
 // #include "cv_orb.hpp"
 
-// void _load_freetype(std::string path, int fontHeight)
-// {
-//   libmaix_cv_image_load_freetype(path.c_str(), fontHeight);
-// }
+void _load_freetype(std::string path, int fontHeight)
+{
+  if (fontHeight <= 0)
+    throw py::value_error("fontHeight must be greater than zero");
+  if (libmaix_cv_image_load_freetype(path.c_str(), fontHeight) != LIBMAIX_ERR_NONE)
+    throw py::value_error("failed to load font: " + path);
+}
 
-// void _free_freetype()
-// {
-//   libmaix_cv_image_free_freetype();
-// }
+void _free_freetype()
+{
+  libmaix_cv_image_free_freetype();
+}
 
 py::tuple _get_string_size(std::string str, double scale, int thickness)
 {
@@ -58,9 +61,9 @@ uint32_t _set_fb_alloc_size(uint32_t size)
 PYBIND11_MODULE(_maix_image, mo)
 {
   // mode_init();         //模块的初始化函数
-  // mo.def("load_freetype", _load_freetype, py::arg("path"), py::arg("fontHeight") = 14)
-  //     .def("free_freetype", _free_freetype)
-  mo.def("get_fb_alloc_size", _get_fb_alloc_size)
+  mo.def("load_freetype", _load_freetype, py::arg("path"), py::arg("fontHeight") = 14)
+      .def("free_freetype", _free_freetype)
+      .def("get_fb_alloc_size", _get_fb_alloc_size)
       .def("set_fb_alloc_size", _set_fb_alloc_size, py::arg("size"))
       .def("get_string_size", _get_string_size, py::arg("str"), py::arg("scale") = 1.0, py::arg("thickness") = 1)
       .def("new", _image_new, py::arg("size") = std::vector<int>{240, 240}, py::arg("color") = std::vector<int>{0, 0, 0}, py::arg("mode") = "RGB", py::arg("addr") = 0)
