@@ -1,0 +1,57 @@
+_maix_image                    so    INFO   /home/aixtr/jyd/jyd_img_work/rootfs/home/MaixPy3/build/lib.linux-armv7l-3.10/_maix_image.cpython-310-arm-linux-gnueabihf.so
+_maix_image                    sha   INFO   c6c60ebcdb2e7972828f8059fec4b5121e7458107f390dc5981b437a6d9d8ed1
+fb_alloc_size                  info  INFO   6291456
+get_pixel channel order        addr  PASS   red(100,100)=(255, 0, 0) gray(10,10)=(128, 128, 128)
+get_pixel coordinates          addr  FAIL   red(80,120)=(128, 128, 128) blue(240,120)=(0, 0, 0) XY_TRANSPOSED (get_pixel(x,y) returns pixel (y,x))
+internal_memory_is_bgr         addr  PASS   red pixel bytes=(0, 0, 255) (expect B,G,R = 0,0,255)
+memory_matches_bgr_buffer      addr  PASS   230400 bytes
+find_blobs(imlib LAB)          addr  PASS   red->['(80,120)'] blue->['(240,120)']
+binary(imlib LAB)              addr  PASS   red=(255, 255, 255) blue=(0, 0, 0) gray=(0, 0, 0)
+get_histogram(imlib LAB)       addr  PASS   red(L=53,B=69) blue(L=32,B=-104)
+get_statistics(imlib LAB)      addr  PASS   red(L=53,A=85,B=68) blue(L=31,A=73,B=-104)
+get_blob_color(co=0 rgb)       addr  PASS   red=(255.0, 0.0, 0.0) blue=(0.0, 0.0, 255.0)
+get_blob_lab(co=1 lab)         addr  PASS   red=[53, 80, 67, 53, 80, 67] blue=[32, 79, -108, 32, 79, -108]
+get_blob_color(co=2 hsv)       addr  PASS   red_h=0 blue_h=120 (OpenCV scale, red 0 / blue 120)
+find_blobs_cv(co=0 rgb)        addr  PASS   red->['(81,121)'] blue->['(241,121)']
+find_blobs_cv(co=1 lab)        addr  PASS   red->['(81,121)'] blue->['(241,121)']
+find_blobs_cv(co=2 hsv)        addr  PASS   red->['(81,121)'] blue->['(241,121)']
+find_ball_color(co=0 rgb)      addr  PASS   red->[(80, 120)] blue->[(240, 120)]
+find_ball_color(co=1 lab)      addr  PASS   red->[(80, 120)] blue->[(240, 120)]
+find_ball_color(co=2 hsv)      addr  PASS   red->[(80, 120)] blue->[(240, 120)]
+custom_find_ball_blob(co=0 rgb) addr  PASS   red->['(81,121)'] blue->['(241,121)']
+custom_find_ball_blob(co=1 lab) addr  PASS   red->['(81,121)'] blue->['(241,121)']
+custom_find_ball_blob(co=2 hsv) addr  PASS   red->['(81,121)'] blue->['(241,121)']
+get_pixel channel order        open  PASS   red(100,100)=(255, 0, 0) gray(10,10)=(128, 128, 128)
+get_pixel coordinates          open  FAIL   red(80,120)=(128, 128, 128) blue(240,120)=(0, 0, 0) XY_TRANSPOSED (get_pixel(x,y) returns pixel (y,x))
+internal_memory_is_bgr         open  PASS   red pixel bytes=(0, 0, 255) (expect B,G,R = 0,0,255)
+memory_matches_bgr_buffer      open  PASS   230400 bytes
+find_blobs(imlib LAB)          open  PASS   red->['(80,120)'] blue->['(240,120)']
+binary(imlib LAB)              open  PASS   red=(255, 255, 255) blue=(0, 0, 0) gray=(0, 0, 0)
+get_histogram(imlib LAB)       open  PASS   red(L=53,B=69) blue(L=32,B=-104)
+get_statistics(imlib LAB)      open  PASS   red(L=53,A=85,B=68) blue(L=31,A=73,B=-104)
+get_blob_color(co=0 rgb)       open  PASS   red=(255.0, 0.0, 0.0) blue=(0.0, 0.0, 255.0)
+get_blob_lab(co=1 lab)         open  PASS   red=[53, 80, 67, 53, 80, 67] blue=[32, 79, -108, 32, 79, -108]
+get_blob_color(co=2 hsv)       open  PASS   red_h=0 blue_h=120 (OpenCV scale, red 0 / blue 120)
+find_blobs_cv(co=0 rgb)        open  PASS   red->['(81,121)'] blue->['(241,121)']
+find_blobs_cv(co=1 lab)        open  PASS   red->['(81,121)'] blue->['(241,121)']
+find_blobs_cv(co=2 hsv)        open  PASS   red->['(81,121)'] blue->['(241,121)']
+find_ball_color(co=0 rgb)      open  PASS   red->[(80, 120)] blue->[(240, 120)]
+find_ball_color(co=1 lab)      open  PASS   red->[(80, 120)] blue->[(240, 120)]
+find_ball_color(co=2 hsv)      open  PASS   red->[(80, 120)] blue->[(240, 120)]
+custom_find_ball_blob(co=0 rgb) open  PASS   red->['(81,121)'] blue->['(241,121)']
+custom_find_ball_blob(co=1 lab) open  PASS   red->['(81,121)'] blue->['(241,121)']
+custom_find_ball_blob(co=2 hsv) open  PASS   red->['(81,121)'] blue->['(241,121)']
+find_rects                     both  PASS   consistent: [[20, 20, 91, 71, 280336]]
+Canny                          both  PASS   consistent: 'f85c3b5a4fe2d6f8851307e7b839e103f1bfd81d'
+find_line(func=0)              both  PASS   consistent: {'rect': [204, 154, 116, 154, 116, 86, 204, 86], 'pixels': 5958, 'cx':
+find_line(func=1)              both  PASS   consistent: {'rect': [204, 154, 116, 154, 116, 86, 204, 86], 'pixels': 5958, 'cx':
+find_circles                   both  PASS   consistent: [[66, 59, 37, 2990]]
+find_lines                     both  PASS   consistent: [[30, 109, 129, 10], [0, 77, 129, 35]]
+find_line_segments             both  WARN   consistent but no result
+find_qrcodes                   both  PASS   consistent: [{'x': 118, 'y': 78, 'w': 84, 'h': 84, 'payload': 'MAIXPY3-01', 'versi
+find_apriltags                 both  PASS   consistent: [(0, [160, 120], 0)]
+find_barcodes(6901234567816)   both  PASS   consistent: [('6901234567816', 6)]
+find_template                  both  PASS   consistent: {'x': 40, 'y': 30, 'w': 50, 'h': 50, 'thresh': 0.8710838556289673}
+image.new(addr) is O(1)        addr  PASS   320x240=27us 640x480=24us 1280x960=20us ratio=0.74 (16x pixels)
+image.load(bytes) copy path    info  INFO   320x240=693us 640x480=1519us 1280x960=5527us
+summary                              INFO   2 FAILURE(S)

@@ -29,6 +29,12 @@ py::list maix_custom::_find_ball_blob(std::vector<std::vector<int>> &thresholds,
         {
             lab = in_img;
         }
+        // Public (Rmin, Gmin, Bmin, Rmax, Gmax, Bmax) bounds applied to BGR memory.
+        for (size_t i = 0; i < thresholds.size(); i++)
+        {
+            std::swap(thresholds[i][0], thresholds[i][2]);
+            std::swap(thresholds[i][3], thresholds[i][5]);
+        }
         break;
     case 1: //lab
         if (in_img.channels() != 3)

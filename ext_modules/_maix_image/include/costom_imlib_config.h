@@ -15,6 +15,14 @@
 extern "C"
 {
 #endif
+// MaixPy3 keeps RGB888/RGBA8888 image memory in OpenCV's B,G,R byte order
+// (see ext_modules/_maix_image/_maix_image.cpp). imlib receives that memory
+// zero-copy as PIXFORMAT_RGB888, so tell it the physical channel layout.
+// Keep in sync with ext_modules/libmaix/components/third_party/include/
+// costom_imlib_config.h: which copy is picked depends on the -I order of
+// the build environment.
+#define IMLIB_RGB888_STORAGE_BGR
+
 // Enable Image I/O
 #define IMLIB_ENABLE_IMAGE_IO
 

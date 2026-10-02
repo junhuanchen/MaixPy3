@@ -40,6 +40,8 @@ py::list maix_vision::get_blob_color_max(std::vector<int> &roi, int critical, in
   rect.height = std::min(roi[3], this->_img->height - roi[1]);
   cv::Mat lab_img;
   lab_img = in_img(rect);
+  // Image memory is BGR: plane 0 is blue and plane 2 is red, so the modes
+  // below are lnum = B, anum = G, bnum = R.
   std::vector<cv::Mat> lab_planes;
   split(lab_img, lab_planes);
   int histSize = 256;
@@ -72,19 +74,19 @@ py::list maix_vision::get_blob_color_max(std::vector<int> &roi, int critical, in
   }
   switch (co)
   {
-  case 0: // rgb
+  case 0: // rgb: public order is (R, G, B)
   {
-    return_val.append(lnum);
-    return_val.append(anum);
     return_val.append(bnum);
+    return_val.append(anum);
+    return_val.append(lnum);
     return return_val;
   }
   break;
   case 1: // lab
   {
-    cv::Mat rgb(1, 1, CV_8UC3, cv::Scalar(lnum, anum, bnum));
+    cv::Mat bgr(1, 1, CV_8UC3, cv::Scalar(lnum, anum, bnum));
     cv::Mat lab;
-    cvtColor(rgb, lab, cv::COLOR_RGB2Lab);
+    cvtColor(bgr, lab, cv::COLOR_BGR2Lab);
     lnum = lab.at<cv::Vec3b>(0, 0)[0];
     anum = lab.at<cv::Vec3b>(0, 0)[1];
     bnum = lab.at<cv::Vec3b>(0, 0)[2];
@@ -111,9 +113,9 @@ py::list maix_vision::get_blob_color_max(std::vector<int> &roi, int critical, in
   break;
   case 2: // hsv
   {
-    cv::Mat rgb(1, 1, CV_8UC3, cv::Scalar(lnum, anum, bnum));
+    cv::Mat bgr(1, 1, CV_8UC3, cv::Scalar(lnum, anum, bnum));
     cv::Mat lab;
-    cvtColor(rgb, lab, cv::COLOR_RGB2HSV);
+    cvtColor(bgr, lab, cv::COLOR_BGR2HSV);
     lnum = lab.at<cv::Vec3b>(0, 0)[0];
     anum = lab.at<cv::Vec3b>(0, 0)[1];
     bnum = lab.at<cv::Vec3b>(0, 0)[2];
@@ -165,6 +167,13 @@ py::list maix_vision::_maix_vision_find_blob(std::vector<std::vector<int>> &thre
     else
     {
       lab = in_img;
+    }
+    // Thresholds are public (Rmin, Gmin, Bmin, Rmax, Gmax, Bmax); the
+    // untouched memory is BGR, so reorder the bounds instead of the pixels.
+    for (size_t i = 0; i < thresholds.size(); i++)
+    {
+      std::swap(thresholds[i][0], thresholds[i][2]);
+      std::swap(thresholds[i][3], thresholds[i][5]);
     }
     break;
   case 1: // lab
@@ -325,6 +334,9 @@ py::list maix_vision::_maix_vision_find_ball_blob(std::vector<int> &thresholds, 
     if (in_img.channels() != 3)
       return out;
     hsv = in_img;
+    // Public (Rmin, Gmin, Bmin, Rmax, Gmax, Bmax) bounds applied to BGR memory.
+    std::swap(thresholds[0], thresholds[2]);
+    std::swap(thresholds[3], thresholds[5]);
     break;
   case 1: // lab
     if (in_img.channels() != 3)
